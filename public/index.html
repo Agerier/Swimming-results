@@ -1,0 +1,526 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Celiņš — результаты плавания</title>
+<meta name="theme-color" content="#0E2A47">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Celiņš">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sofia+Sans:wght@400;500;700&family=Sofia+Sans+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #F1F7F9; --surface: #FFFFFF; --ink: #0E2A47; --muted: #566878; --line: #D3E1E8;
+  --water: #0A7C96; --water-ink: #FFFFFF; --wash: #E1F1F5; --rope: #F2C230; --rope-ink: #3A2C00;
+  --alert: #B93A2B; --deck: #0E2A47; --deck-ink: #F1F7F9;
+  --gold: #D9A514; --silver: #8E9BA6; --bronze: #B8713A;
+  --body: "Sofia Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --cond: "Sofia Sans Condensed", "Arial Narrow", "Roboto Condensed", system-ui, sans-serif;
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #071A2C; --surface: #0D2740; --ink: #EAF4F8; --muted: #9BB1C0; --line: #1E4060;
+    --water: #54C6DC; --water-ink: #05202B; --wash: #123752; --deck: #05131F; --deck-ink: #EAF4F8;
+    --alert: #FF8A78;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #071A2C; --surface: #0D2740; --ink: #EAF4F8; --muted: #9BB1C0; --line: #1E4060;
+  --water: #54C6DC; --water-ink: #05202B; --wash: #123752; --deck: #05131F; --deck-ink: #EAF4F8;
+  --alert: #FF8A78;
+}
+*, *::before, *::after { box-sizing: inherit; }
+html { scroll-padding-top: calc(env(safe-area-inset-top, 0px) + 56px); height: 100%; }
+body { margin: 0; min-height: 100%; background: var(--bg); color: var(--ink); font: 400 16px/1.45 var(--body); -webkit-text-size-adjust: 100%; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--deck); }
+button, input, select { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 3px solid var(--rope); outline-offset: 2px; }
+a { color: var(--water); }
+
+.bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 9; background: var(--deck); color: var(--deck-ink); }
+.bar-in { max-width: 760px; margin: 0 auto; padding: 10px 16px; display: flex; align-items: center; gap: 12px; }
+.brand { font: 700 24px/1 var(--cond); letter-spacing: .01em; background: none; border: 0; color: inherit; padding: 4px 0; }
+.langs { display: flex; gap: 2px; }
+.theme { margin-left: auto; background: none; border: 0; color: var(--deck-ink); font-size: 18px; line-height: 1; padding: 6px 8px; border-radius: 6px; }
+.langs button { background: none; border: 0; color: var(--deck-ink); opacity: .6; padding: 6px 8px; border-radius: 6px; font-weight: 500; font-size: 14px; }
+.langs button[aria-pressed="true"] { opacity: 1; background: rgba(255,255,255,.14); }
+/* lane rope: the one decorative device, also used as the "now" marker */
+.rope { height: 6px; background: repeating-linear-gradient(90deg, var(--rope) 0 18px, transparent 18px 22px, var(--deck-ink) 22px 40px, transparent 40px 44px); opacity: .95; }
+.bar .rope { background: repeating-linear-gradient(90deg, var(--rope) 0 18px, var(--deck) 18px 22px, #F1F7F9 22px 40px, var(--deck) 40px 44px); }
+
+main { max-width: 760px; margin: 0 auto; padding: 20px 16px 56px; }
+h1 { font: 700 34px/1.05 var(--cond); margin: 0 0 6px; text-wrap: balance; }
+h2 { font: 700 20px/1.2 var(--cond); margin: 28px 0 8px; color: var(--muted); }
+.meta { color: var(--muted); display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 15px; }
+.live { display: inline-flex; align-items: center; gap: 6px; }
+.live i { width: 8px; height: 8px; border-radius: 50%; background: var(--water); }
+.notice { background: var(--wash); border-radius: 10px; padding: 10px 14px; font-size: 14px; margin: 0 0 18px; }
+
+.tabs { display: flex; gap: 4px; margin: 20px 0 14px; border-bottom: 2px solid var(--line); }
+.tabs button { background: none; border: 0; padding: 10px 14px; font-weight: 700; color: var(--muted); border-bottom: 3px solid transparent; margin-bottom: -2px; }
+.tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--water); }
+.tabs button:disabled { opacity: .4; cursor: default; }
+
+.list { list-style: none; margin: 0; padding: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+.list > li + li { border-top: 1px solid var(--line); }
+.ev { display: grid; grid-template-columns: 58px 1fr auto; gap: 10px; align-items: center; width: 100%; text-align: left; background: none; border: 0; padding: 12px 14px; min-height: 60px; }
+button.ev:hover { background: var(--wash); }
+.ev .t { font: 700 22px/1 var(--cond); font-variant-numeric: tabular-nums; }
+.ev .n { font-weight: 700; line-height: 1.25; }
+.ev .a { color: var(--muted); font-size: 14px; }
+.ev.cer { min-height: 0; padding-block: 8px; }
+.ev.cer .t, .ev.cer .n { font-weight: 400; color: var(--muted); font-size: 15px; }
+.ev.cer .t { font: 600 17px/1 var(--cond); }
+li.now { background: var(--wash); }
+.nowtag { display: inline-block; background: var(--rope); color: var(--rope-ink); font-size: 12px; font-weight: 700; padding: 1px 8px; border-radius: 99px; margin-left: 6px; vertical-align: 2px; }
+.pill { font-size: 13px; font-weight: 700; padding: 4px 10px; border-radius: 99px; white-space: nowrap; }
+.pill.res { background: var(--water); color: var(--water-ink); }
+.pill.start { box-shadow: inset 0 0 0 1.5px var(--line); color: var(--muted); }
+
+.back { background: none; border: 0; padding: 6px 0; color: var(--water); font-weight: 700; margin-bottom: 8px; }
+.filters { display: flex; gap: 8px; overflow-x: auto; padding: 2px 2px 10px; margin: 0 -2px; scrollbar-width: none; }
+.chip { flex: none; background: var(--surface); border: 1.5px solid var(--line); border-radius: 99px; padding: 7px 14px; font-weight: 500; font-size: 14px; }
+.chip[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--bg); }
+select.chip { appearance: none; padding-right: 30px; max-width: 220px; background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%), linear-gradient(135deg, var(--muted) 50%, transparent 50%); background-position: calc(100% - 16px) 55%, calc(100% - 11px) 55%; background-size: 5px 5px; background-repeat: no-repeat; }
+
+.row { display: grid; grid-template-columns: 34px 1fr auto 36px; gap: 10px; align-items: center; padding: 10px 6px 10px 12px; }
+.row.fav { box-shadow: inset 4px 0 0 var(--rope); }
+.pl { font: 700 20px/1 var(--cond); text-align: center; color: var(--muted); font-variant-numeric: tabular-nums; }
+.pl.m { width: 30px; height: 30px; line-height: 30px; border-radius: 50%; color: #fff; font-size: 18px; }
+.pl.m1 { background: var(--gold); } .pl.m2 { background: var(--silver); } .pl.m3 { background: var(--bronze); }
+.pl.st { font-size: 14px; color: var(--alert); }
+.pl.lane { color: var(--ink); }
+.who { min-width: 0; }
+.who .nm { line-height: 1.25; overflow-wrap: anywhere; }
+.who .nm b { font-weight: 700; }
+.who .cl { color: var(--muted); font-size: 14px; }
+.who .note { color: var(--alert); font-size: 13px; margin-top: 2px; }
+.who .sub { color: var(--muted); font-size: 13px; margin-top: 3px; }
+.who .splits { display: flex; flex-wrap: wrap; gap: 2px 12px; }
+.who .splits i { font-style: normal; opacity: .7; }
+.who .num { font-variant-numeric: tabular-nums; color: var(--ink); }
+.who .lap { font-variant-numeric: tabular-nums; }
+.tm { text-align: right; }
+.tm .v { font: 700 24px/1 var(--cond); font-variant-numeric: tabular-nums; }
+.tm .p { color: var(--muted); font-size: 13px; }
+.star { background: none; border: 0; width: 36px; height: 40px; font-size: 20px; line-height: 1; color: var(--line); border-radius: 8px; }
+.star[aria-pressed="true"] { color: var(--rope); }
+.src { margin-top: 18px; font-size: 14px; color: var(--muted); }
+
+.search { width: 100%; padding: 13px 16px; border-radius: 12px; border: 1.5px solid var(--line); background: var(--surface); font-size: 17px; margin-bottom: 14px; }
+.person { padding: 12px 6px 12px 14px; }
+.person .hd { display: flex; align-items: center; gap: 8px; }
+.person .hd .who { flex: 1; }
+.swim { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: baseline; width: 100%; text-align: left; background: none; border: 0; border-top: 1px dashed var(--line); padding: 8px 8px 8px 0; margin-top: 8px; }
+.swim .d { font-size: 14px; color: var(--muted); }
+.swim .v { font: 700 20px/1 var(--cond); font-variant-numeric: tabular-nums; text-align: right; }
+.empty { color: var(--muted); padding: 28px 8px; text-align: center; }
+.err { background: var(--surface); border: 1.5px solid var(--alert); border-radius: 12px; padding: 14px; }
+.err button, .cta { background: var(--water); color: var(--water-ink); border: 0; border-radius: 10px; padding: 12px 18px; font-weight: 700; }
+.home p { max-width: 52ch; color: var(--muted); }
+.open { display: flex; gap: 8px; margin: 18px 0 8px; }
+.open input { flex: 1; min-width: 0; margin: 0; }
+.docs { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 14px; }
+@media (min-width: 620px) { h1 { font-size: 44px; } .ev { grid-template-columns: 70px 1fr auto; } }
+@media (prefers-reduced-motion: no-preference) { .live i { animation: pulse 2s infinite; } @keyframes pulse { 50% { opacity: .35; } } }
+</style>
+</head>
+<body>
+<header class="bar">
+  <div class="bar-in">
+    <button class="brand" id="brand">Celiņš</button>
+    <button class="theme" id="theme"></button>
+    <div class="langs" id="langs"></div>
+  </div>
+  <div class="rope"></div>
+</header>
+<main id="app"></main>
+<!--DEMO-->
+<script>
+(function () {
+'use strict';
+var DEMO = window.__DEMO__ || null;
+
+/* ---------- words ---------- */
+var I18N = {
+  ru: {
+    tagline: 'Результаты плавания', intro: 'Вставьте номер или ссылку соревнования с live.swimrankings.net — программа, стартовые листы и результаты откроются в удобном виде.',
+    openPh: 'Например, 11609 или ссылка', open: 'Открыть соревнование', recent: 'Недавние', badId: 'Не вижу номера соревнования. Он стоит в конце ссылки: live.swimrankings.net/11609/',
+    schedule: 'Программа', swimmers: 'Пловцы', results: 'Результаты', startlist: 'Стартовый лист', updated: 'Обновлено', live: 'идёт сегодня',
+    now: 'сейчас', ceremony: 'Награждение', back: '‹ Программа', all: 'Все', allClubs: 'Все клубы', heat: 'Заплыв', of: 'из', lane: 'дор.',
+    pts: 'очк.', pdf: 'Открыть исходный PDF', noResults: 'Результатов пока нет. Страница проверяет обновления каждые 30 секунд.', noStart: 'Стартовый лист ещё не опубликован.',
+    searchPh: 'Фамилия или клуб', favHint: 'Отметьте пловца звёздочкой в результатах или стартовом листе — и здесь будут все его заплывы. Или начните вводить фамилию.',
+    loading: 'Загружаю', loadingLists: 'Читаю списки', nobody: 'Никого не нашлось.', fav: 'В избранное', unfav: 'Убрать из избранного',
+    errLoad: 'Не удалось загрузить данные', retry: 'Повторить', notFound: 'Соревнование с таким номером не найдено на live.swimrankings.net.',
+    demo: 'Демо на снимке данных от 22.11.2026, 13:14. Загружены результаты заплыва №2 и стартовый лист заплыва №4.', demoMiss: 'В демо этот список не загружен. На работающем сайте он подтянется автоматически.',
+    docs: 'Документы организаторов', source: 'Источник', place: 'место', exh: 'Вне конкурса', entry: 'заявка', theme: 'Тема', theme_auto: 'как в системе', theme_light: 'светлая', theme_dark: 'тёмная'
+  },
+  lv: {
+    tagline: 'Peldēšanas rezultāti', intro: 'Ielīmējiet sacensību numuru vai saiti no live.swimrankings.net — programma, starta protokoli un rezultāti atvērsies ērtā skatā.',
+    openPh: 'Piemēram, 11609 vai saite', open: 'Atvērt sacensības', recent: 'Nesen skatītās', badId: 'Neredzu sacensību numuru. Tas ir saites beigās: live.swimrankings.net/11609/',
+    schedule: 'Programma', swimmers: 'Peldētāji', results: 'Rezultāti', startlist: 'Starta protokols', updated: 'Atjaunots', live: 'notiek šodien',
+    now: 'tagad', ceremony: 'Apbalvošana', back: '‹ Programma', all: 'Visi', allClubs: 'Visi klubi', heat: 'Peldējums', of: 'no', lane: 'cel.',
+    pts: 'p.', pdf: 'Atvērt oriģinālo PDF', noResults: 'Rezultātu vēl nav. Lapa pārbauda jaunumus ik pēc 30 sekundēm.', noStart: 'Starta protokols vēl nav publicēts.',
+    searchPh: 'Uzvārds vai klubs', favHint: 'Atzīmējiet peldētāju ar zvaigznīti rezultātos vai starta protokolā — šeit būs visi viņa starti. Vai sāciet rakstīt uzvārdu.',
+    loading: 'Ielādēju', loadingLists: 'Lasu sarakstus', nobody: 'Neviens nav atrasts.', fav: 'Pievienot izlasei', unfav: 'Noņemt no izlases',
+    errLoad: 'Neizdevās ielādēt datus', retry: 'Mēģināt vēlreiz', notFound: 'Sacensības ar šādu numuru nav atrastas vietnē live.swimrankings.net.',
+    demo: 'Demo ar datu kopiju no 22.11.2026, 13:14. Ielādēti 2. distances rezultāti un 4. distances starta protokols.', demoMiss: 'Demo versijā šis saraksts nav ielādēts. Strādājošā vietnē tas ielādēsies automātiski.',
+    docs: 'Organizatoru dokumenti', source: 'Avots', place: 'vieta', exh: 'Ārpus konkursa', entry: 'pieteikums', theme: 'Izskats', theme_auto: 'kā sistēmā', theme_light: 'gaišs', theme_dark: 'tumšs'
+  },
+  en: {
+    tagline: 'Swimming results', intro: 'Paste a meet number or link from live.swimrankings.net — the schedule, start lists and results open in a readable view.',
+    openPh: 'For example, 11609 or a link', open: 'Open meet', recent: 'Recent', badId: 'No meet number found. It is at the end of the link: live.swimrankings.net/11609/',
+    schedule: 'Schedule', swimmers: 'Swimmers', results: 'Results', startlist: 'Start list', updated: 'Updated', live: 'on today',
+    now: 'now', ceremony: 'Medal ceremony', back: '‹ Schedule', all: 'All', allClubs: 'All clubs', heat: 'Heat', of: 'of', lane: 'lane',
+    pts: 'pts', pdf: 'Open the original PDF', noResults: 'No results yet. The page checks for updates every 30 seconds.', noStart: 'The start list is not published yet.',
+    searchPh: 'Surname or club', favHint: 'Star a swimmer in the results or a start list and all their swims appear here. Or start typing a surname.',
+    loading: 'Loading', loadingLists: 'Reading lists', nobody: 'Nobody found.', fav: 'Add to favourites', unfav: 'Remove from favourites',
+    errLoad: 'Could not load the data', retry: 'Try again', notFound: 'No meet with this number on live.swimrankings.net.',
+    demo: 'Demo on a data snapshot from 22.11.2026, 13:14. Loaded: results of event 2 and the start list of event 4.', demoMiss: 'This list is not loaded in the demo. On the running site it loads automatically.',
+    docs: 'Organiser documents', source: 'Source', place: 'place', exh: 'Exhibition', entry: 'entry', theme: 'Theme', theme_auto: 'system', theme_light: 'light', theme_dark: 'dark'
+  }
+};
+var TERMS = {
+  ru: { Freestyle: 'вольный стиль', Backstroke: 'на спине', Breaststroke: 'брасс', Butterfly: 'баттерфляй', Medley: 'комплекс', Girls: 'Девочки', Boys: 'Мальчики', Women: 'Женщины', Men: 'Мужчины', Mixed: 'Смешанные', All: 'Все', Open: 'открытая группа', YOB: 'г. р.', 'and younger': 'и младше', 'and older': 'и старше' },
+  lv: { Freestyle: 'brīvais stils', Backstroke: 'uz muguras', Breaststroke: 'brass', Butterfly: 'tauriņstils', Medley: 'komplekss', Girls: 'Meitenes', Boys: 'Zēni', Women: 'Sievietes', Men: 'Vīrieši', Mixed: 'Jauktā', All: 'Visi', Open: 'atklātā grupa', YOB: 'dz. g.', 'and younger': 'un jaunāki', 'and older': 'un vecāki' },
+  en: {}
+};
+
+/* ---------- state ---------- */
+var store = {
+  get: function (k, d) { try { var v = localStorage.getItem('celins.' + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set: function (k, v) { try { localStorage.setItem('celins.' + k, JSON.stringify(v)); } catch (e) {} }
+};
+var S = {
+  lang: store.get('lang', 'ru'), favs: store.get('favs', []), recent: store.get('recent', []),
+  route: '', meet: null, meetErr: null, tab: 'results', data: {}, group: null, club: '', query: '', index: null, progress: null
+};
+var app = document.getElementById('app');
+function applyTheme() {
+  var th = store.get('theme', 'auto'), b = document.getElementById('theme');
+  if (th === 'auto') document.documentElement.removeAttribute('data-theme'); else document.documentElement.setAttribute('data-theme', th);
+  b.textContent = th === 'auto' ? '◐' : th === 'light' ? '☀' : '☾';
+  b.setAttribute('aria-label', t('theme') + ': ' + t('theme_' + th)); b.title = b.getAttribute('aria-label');
+}
+function t(k) { return (I18N[S.lang] || I18N.ru)[k] || k; }
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+function tr(s) {
+  var d = TERMS[S.lang] || {}; s = String(s || '');
+  Object.keys(d).forEach(function (k) { s = s.replace(new RegExp('\\b' + k + '\\b', 'g'), d[k]); });
+  if (S.lang !== 'en') s = s.replace(/^(г\. р\.|dz\. g\.)\s+(.+)$/, '$2 $1').replace(/\b(\d+)m\b/g, S.lang === 'ru' ? '$1 м' : '$1 m');
+  return s;
+}
+function evTitle(e) { return tr(e.gender) + ', ' + tr(e.name); }
+function fkey(p) { return p.name + '|' + p.yb; }
+function isFav(p) { return S.favs.indexOf(fkey(p)) >= 0; }
+function norm(s) { return String(s).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''); }
+
+/* ---------- data ---------- */
+function api(kind, params) {
+  if (DEMO) {
+    var d = kind === 'meet' ? DEMO.meet : (DEMO[kind] || {})[params.n];
+    return d ? Promise.resolve(d) : Promise.reject({ demo: true });
+  }
+  return fetch('/api/' + kind + '?' + new URLSearchParams(params)).then(function (r) {
+    return r.json().then(function (j) { if (!r.ok) throw { status: r.status, message: j.error }; return j; });
+  });
+}
+function parseRoute(h) {
+  var m = /^m(\d+)(?:-(s)|-e(\d+))?$/.exec(h || '');
+  if (!m) return { view: 'home' };
+  return { id: m[1], view: m[2] ? 'swimmers' : m[3] ? 'event' : 'schedule', n: m[3] ? Number(m[3]) : null };
+}
+function go(h) {
+  S.route = h;
+  try { if (location.hash.slice(1) !== h) location.hash = h; } catch (e) {}
+  enter();
+}
+function enter() {
+  var r = parseRoute(S.route);
+  if (r.view === 'home') { S.meet = null; render(); return; }
+  if (!S.meet || S.meet.id !== r.id) { S.meet = null; S.meetErr = null; S.data = {}; S.index = null; }
+  if (r.view === 'event') { S.group = null; S.club = ''; }
+  render(); window.scrollTo(0, 0);
+  refresh();
+}
+function eventByN(n) {
+  return (S.meet ? S.meet.events : []).filter(function (e) { return e.kind === 'race' && (e.results === n || e.startlist === n); })[0];
+}
+function loadList(kind, n) {
+  var key = kind + n;
+  return api(kind, { id: parseRoute(S.route).id, n: n }).then(
+    function (d) { S.data[key] = { ok: d }; },
+    function (e) { if (!S.data[key] || !S.data[key].ok) S.data[key] = { err: e }; });
+}
+function refresh() {
+  var r = parseRoute(S.route);
+  if (r.view === 'home') return;
+  api('meet', { id: r.id }).then(function (m) {
+    S.meet = m; S.meetErr = null;
+    S.recent = [{ id: m.id, title: m.title, date: m.date }].concat(S.recent.filter(function (x) { return x.id !== m.id; })).slice(0, 6);
+    store.set('recent', S.recent);
+    if (r.view === 'event') {
+      var e = eventByN(r.n), jobs = [];
+      if (e && e.results != null) jobs.push(loadList('results', e.results));
+      if (e && e.startlist != null) jobs.push(loadList('startlist', e.startlist));
+      if (e && e.results == null && S.tab === 'results') S.tab = 'startlist';
+      return Promise.all(jobs);
+    }
+    if (r.view === 'swimmers' && (!S.index || Date.now() - S.indexAt > 60000)) return buildIndex();
+  }, function (e) { if (!S.meet) S.meetErr = e; }).then(function () {
+    if (parseRoute(S.route).id === r.id) render();
+  });
+}
+function buildIndex() {
+  var jobs = [];
+  S.meet.events.forEach(function (e) {
+    if (e.kind !== 'race') return;
+    if (e.results != null) jobs.push(['results', e.results, e]);
+    else if (e.startlist != null) jobs.push(['startlist', e.startlist, e]);
+  });
+  var people = {}, done = 0, i = 0;
+  S.progress = [0, jobs.length];
+  function add(p, item) {
+    var k = fkey(p);
+    (people[k] = people[k] || { name: p.name, yb: p.yb, club: p.club, swims: [] }).swims.push(item);
+  }
+  function next() {
+    if (i >= jobs.length) return Promise.resolve();
+    var j = jobs[i++];
+    return loadList(j[0], j[1]).then(function () {
+      var d = (S.data[j[0] + j[1]] || {}).ok;
+      if (d && j[0] === 'results') d.groups.forEach(function (g) { g.rows.forEach(function (row) { add(row, { e: j[2], row: row }); }); });
+      if (d && j[0] === 'startlist') d.heats.forEach(function (h) { h.entries.forEach(function (en) { add(en, { e: j[2], heat: h, entry: en }); }); });
+      S.progress = [++done, jobs.length];
+      var el = document.getElementById('progress'); if (el) el.textContent = t('loadingLists') + ' ' + done + ' / ' + jobs.length;
+      return next();
+    });
+  }
+  return Promise.all([next(), next(), next(), next()]).then(function () {
+    S.index = Object.keys(people).map(function (k) { return people[k]; }).sort(function (a, b) { return a.name.localeCompare(b.name); });
+    S.progress = null; S.indexAt = Date.now();
+  });
+}
+
+/* ---------- pieces ---------- */
+function nameHtml(n) {
+  var parts = String(n).split(' '), i = 0;
+  while (i < parts.length && parts[i] === parts[i].toUpperCase() && /[A-ZĀ-Ž]/.test(parts[i])) i++;
+  if (!i) return esc(n);
+  return '<b>' + esc(parts.slice(0, i).join(' ')) + '</b> ' + esc(parts.slice(i).join(' '));
+}
+function star(p) {
+  var on = isFav(p);
+  return '<button class="star" data-fav="' + esc(fkey(p)) + '" aria-pressed="' + on + '" aria-label="' + esc(on ? t('unfav') : t('fav')) + '">' + (on ? '★' : '☆') + '</button>';
+}
+function splitsHtml(p) {
+  var out = '';
+  if (p.members && p.members.length) out += '<div class="sub">' + p.members.map(function (m) {
+    return '<div>' + esc(m.name) + (m.yb ? ' ’' + esc(m.yb) : '') + (m.time ? ' <span class="num">' + esc(m.time) + '</span>' : '') + '</div>';
+  }).join('') + '</div>';
+  if (p.swimmers) out += '<div class="sub">' + esc(p.swimmers) + '</div>';
+  if (p.splits && p.splits.length) out += '<div class="sub splits">' + p.splits.map(function (x) {
+    return '<span>' + (x.dist ? '<i>' + x.dist + '</i> ' : '') + '<span class="num">' + esc(x.time || x.lap) + '</span>' + (x.time && x.lap && x.lap !== x.time ? ' <span class="lap">' + esc(x.lap) + '</span>' : '') + '</span>';
+  }).join('') + '</div>';
+  return out;
+}
+function whoHtml(p, note) {
+  var sub = [p.club && p.club !== p.name ? p.club : '', p.yb ? '’' + p.yb : ''].filter(Boolean).join(', ');
+  return '<div class="who"><div class="nm">' + nameHtml(p.name) + '</div>' + (sub ? '<div class="cl">' + esc(sub) + '</div>' : '') + (note ? '<div class="note">' + esc(note) + '</div>' : '') + splitsHtml(p) + '</div>';
+}
+function errHtml(e) {
+  if (e && e.demo) return '<p class="notice">' + esc(t('demoMiss')) + '</p>';
+  var msg = e && e.status === 404 ? t('notFound') : t('errLoad') + (e && e.message ? ': ' + e.message : '');
+  return '<div class="err"><p style="margin-top:0">' + esc(msg) + '</p><button data-retry>' + esc(t('retry')) + '</button></div>';
+}
+function meetIsToday() {
+  // "22.11.2026", "5.11.2026", "14. - 15.11.2026", "30.11. - 1.12.2026"
+  var m = /^(?:(\d{1,2})\.(?:(\d{1,2})\.)?(?:(\d{4}))?\s*-\s*)?(\d{1,2})\.(\d{1,2})\.(\d{4})$/.exec(String(S.meet.date || '').trim());
+  if (!m) return false;
+  var end = new Date(+m[6], m[5] - 1, +m[4]).getTime();
+  var start = m[1] ? new Date(+(m[3] || m[6]), (m[2] || m[5]) - 1, +m[1]).getTime() : end;
+  var now = new Date(), today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  return today >= start && today <= end;
+}
+function headHtml(r) {
+  var m = S.meet, upd = m.lastUpdated ? m.lastUpdated.split(' ').pop() : null;
+  return (DEMO ? '<p class="notice">' + esc(t('demo')) + '</p>' : '') +
+    '<h1>' + esc(m.title) + '</h1><div class="meta">' +
+    [m.city, m.date, m.course].filter(Boolean).map(function (x) { return '<span>' + esc(x) + '</span>'; }).join('') +
+    (upd ? '<span class="live">' + (meetIsToday() ? '<i></i>' : '') + esc(t('updated') + ' ' + upd) + '</span>' : '') + '</div>' +
+    '<div class="tabs" role="tablist">' +
+    '<button role="tab" data-go="m' + m.id + '" aria-selected="' + (r.view === 'schedule') + '">' + esc(t('schedule')) + '</button>' +
+    '<button role="tab" data-go="m' + m.id + '-s" aria-selected="' + (r.view === 'swimmers') + '">' + esc(t('swimmers')) + '</button></div>';
+}
+
+/* ---------- views ---------- */
+function viewHome() {
+  return '<section class="home"><h1>' + esc(t('tagline')) + '</h1><p>' + esc(t('intro')) + '</p>' +
+    '<div class="open"><input class="search" id="meetInput" inputmode="url" autocomplete="off" placeholder="' + esc(t('openPh')) + '" aria-label="' + esc(t('openPh')) + '">' +
+    '<button class="cta" id="meetOpen">' + esc(t('open')) + '</button></div><p id="homeErr" class="note" style="color:var(--alert)"></p>' +
+    (S.recent.length ? '<h2>' + esc(t('recent')) + '</h2><ul class="list">' + S.recent.map(function (x) {
+      return '<li><button class="ev" style="grid-template-columns:1fr" data-go="m' + esc(x.id) + '"><span><span class="n">' + esc(x.title) + '</span><br><span class="a">' + esc(x.date || '') + '</span></span></button></li>';
+    }).join('') + '</ul>' : '') + '</section>';
+}
+function viewSchedule(r) {
+  var m = S.meet, html = headHtml(r), now = new Date(), cur = -1;
+  if (meetIsToday()) {
+    // "Now" is the first race without results once racing has started. It follows the
+    // published results, so it does not depend on the viewer's time zone.
+    var mins = now.getHours() * 60 + now.getMinutes(), started = false;
+    for (var k = 0; k < m.events.length && cur < 0; k++) {
+      var ev = m.events[k]; if (ev.kind !== 'race') continue;
+      if (ev.results != null) { started = true; continue; }
+      var p = ev.time ? ev.time.split(':') : null;
+      if (started || (p && p[0] * 60 + +p[1] <= mins)) cur = k; else break;
+    }
+  }
+  var session = null, open = false;
+  m.events.forEach(function (e, i) {
+    if (e.session !== session || !open) {
+      if (open) html += '</ul>';
+      session = e.session;
+      var s = String(session || '').match(/\d{2}\.\d{2}\.\d{4}/);
+      if (s && String(m.date).indexOf(' - ') > 0) html += '<h2>' + esc(s[0]) + '</h2>';
+      html += '<ul class="list">'; open = true;
+    }
+    if (e.kind === 'ceremony') {
+      html += '<li><div class="ev cer"><span class="t">' + esc(e.time || '') + '</span><span class="n">' + esc(t('ceremony')) + ': ' + esc(evTitle(e)) + '</span><span></span></div></li>';
+      return;
+    }
+    var n = e.results != null ? e.results : e.startlist;
+    var pill = e.results != null ? '<span class="pill res">' + esc(t('results')) + '</span>' : e.startlist != null ? '<span class="pill start">' + esc(t('startlist')) + '</span>' : '<span></span>';
+    var inner = '<span class="t">' + esc(e.time || '') + '</span><span><span class="n">' + esc(evTitle(e)) + (i === cur ? '<span class="nowtag">' + esc(t('now')) + '</span>' : '') + '</span><br><span class="a">' + esc(tr(e.age)) + '</span></span>' + pill;
+    html += '<li' + (i === cur ? ' class="now"' : '') + '>' + (i === cur ? '<div class="rope"></div>' : '') +
+      (n != null ? '<button class="ev" data-go="m' + m.id + '-e' + n + '">' + inner + '</button>' : '<div class="ev">' + inner + '</div>') + '</li>';
+  });
+  if (open) html += '</ul>';
+  if (!m.events.length) html += '<p class="empty">' + esc(t('noStart')) + '</p>';
+  if (m.docs.length) html += '<h2>' + esc(t('docs')) + '</h2><div class="docs">' + m.docs.map(function (d) { return '<a href="' + esc(d.url) + '" target="_blank" rel="noopener">' + esc(d.title) + '</a>'; }).join('') + '</div>';
+  html += '<p class="src">' + esc(t('source')) + ': <a href="' + esc(m.sourceUrl) + '" target="_blank" rel="noopener">live.swimrankings.net/' + esc(m.id) + '</a></p>';
+  return html;
+}
+function viewEvent(r) {
+  var m = S.meet, e = eventByN(r.n);
+  var html = '<button class="back" data-go="m' + m.id + '">' + esc(t('back')) + '</button>';
+  if (!e) return html + errHtml({ status: 404 });
+  html += '<h1>' + esc(evTitle(e)) + '</h1><div class="meta"><span>' + esc(tr(e.age)) + '</span>' + (e.time ? '<span>' + esc(e.time) + '</span>' : '') + '</div>';
+  html += '<div class="tabs" role="tablist"><button role="tab" data-tab="results" aria-selected="' + (S.tab === 'results') + '"' + (e.results == null ? ' disabled' : '') + '>' + esc(t('results')) + '</button>' +
+    '<button role="tab" data-tab="startlist" aria-selected="' + (S.tab === 'startlist') + '"' + (e.startlist == null ? ' disabled' : '') + '>' + esc(t('startlist')) + '</button></div>';
+  var n = S.tab === 'results' ? e.results : e.startlist;
+  if (n == null) return html + '<p class="empty">' + esc(S.tab === 'results' ? t('noResults') : t('noStart')) + '</p>';
+  var d = S.data[S.tab + n];
+  if (!d) return html + '<p class="empty">' + esc(t('loading')) + '…</p>';
+  if (d.err) return html + errHtml(d.err);
+  d = d.ok;
+  var clubs = {};
+  (d.groups || d.heats).forEach(function (g) { (g.rows || g.entries).forEach(function (x) { clubs[x.club] = 1; }); });
+  clubs = Object.keys(clubs).sort();
+  var clubSel = clubs.length > 1 ? '<select class="chip" id="club" aria-label="' + esc(t('allClubs')) + '"><option value="">' + esc(t('allClubs')) + '</option>' + clubs.map(function (c) { return '<option' + (c === S.club ? ' selected' : '') + '>' + esc(c) + '</option>'; }).join('') + '</select>' : '';
+  var byClub = function (x) { return !S.club || x.club === S.club; };
+
+  if (S.tab === 'results') {
+    var gname = function (g) { return g.name === 'EXH' ? t('exh') : tr(g.name) || t('results'); };
+    html += '<div class="filters">' + (d.groups.length > 1 ? '<button class="chip" data-group="" aria-pressed="' + (S.group == null) + '">' + esc(t('all')) + '</button>' + d.groups.map(function (g, i) {
+      return '<button class="chip" data-group="' + i + '" aria-pressed="' + (S.group === i) + '">' + esc(gname(g)) + '</button>';
+    }).join('') : '') + clubSel + '</div>';
+    var any = false;
+    d.groups.forEach(function (g, i) {
+      if (S.group != null && S.group !== i) return;
+      var rows = g.rows.filter(byClub); if (!rows.length) return; any = true;
+      if (d.groups.length > 1) html += '<h2>' + esc(gname(g)) + '</h2>';
+      html += '<ul class="list">' + rows.map(function (x) {
+        var pl = x.status !== 'OK' ? '<span class="pl st">' + esc(x.status) + '</span>' : x.place <= 3 && g.name !== 'EXH' ? '<span class="pl m m' + x.place + '">' + x.place + '</span>' : '<span class="pl">' + x.place + '</span>';
+        return '<li class="row' + (isFav(x) ? ' fav' : '') + '">' + pl + whoHtml(x, x.note) + '<div class="tm"><div class="v">' + esc(x.time || '') + '</div>' + (x.points != null ? '<div class="p">' + x.points + ' ' + esc(t('pts')) + '</div>' : '') + '</div>' + star(x) + '</li>';
+      }).join('') + '</ul>';
+    });
+    if (!any) html += '<p class="empty">' + esc(t('nobody')) + '</p>';
+  } else {
+    html += clubSel ? '<div class="filters">' + clubSel + '</div>' : '';
+    d.heats.forEach(function (h) {
+      var rows = h.entries.filter(byClub); if (!rows.length) return;
+      html += '<h2>' + esc(h.number ? t('heat') + ' ' + h.number + (h.of ? ' ' + t('of') + ' ' + h.of : '') : h.name) + '</h2><ul class="list">' + rows.map(function (x) {
+        return '<li class="row' + (isFav(x) ? ' fav' : '') + '"><span class="pl lane">' + x.lane + '</span>' + whoHtml(x) + '<div class="tm"><div class="v">' + esc(x.time || '') + '</div></div>' + star(x) + '</li>';
+      }).join('') + '</ul>';
+    });
+  }
+  if (d.pdf) html += '<p class="src"><a href="' + esc(d.pdf) + '" target="_blank" rel="noopener">' + esc(t('pdf')) + '</a></p>';
+  return html;
+}
+function peopleHtml() {
+  if (!S.index) return '<p class="empty" id="progress">' + esc(t('loadingLists')) + (S.progress ? ' ' + S.progress[0] + ' / ' + S.progress[1] : '…') + '</p>';
+  var q = norm(S.query.trim()), list;
+  if (q) list = S.index.filter(function (p) { return norm(p.name).indexOf(q) >= 0 || norm(p.club).indexOf(q) >= 0; });
+  else list = S.index.filter(isFav);
+  if (!list.length) return '<p class="empty">' + esc(q ? t('nobody') : t('favHint')) + '</p>';
+  return '<ul class="list">' + list.slice(0, 60).map(function (p) {
+    return '<li class="person"><div class="hd">' + whoHtml({ name: p.name, yb: p.yb, club: p.club }) + star(p) + '</div>' + p.swims.map(function (s) {
+      var n = s.e.results != null ? s.e.results : s.e.startlist, d, v;
+      if (s.row) { d = s.row.status === 'OK' ? s.row.place + ' ' + t('place') : s.row.status; v = s.row.time || ''; }
+      else { d = (s.e.time ? s.e.time + ', ' : '') + (s.heat.number ? t('heat').toLowerCase() + ' ' + s.heat.number + ', ' : '') + t('lane') + ' ' + s.entry.lane + (s.entry.time ? ', ' + t('entry') : ''); v = s.entry.time || ''; }
+      return '<button class="swim" data-go="m' + S.meet.id + '-e' + n + '" data-tabgo="' + (s.row ? 'results' : 'startlist') + '"><span>' + esc(evTitle(s.e)) + '<br><span class="d">' + esc(d) + '</span></span><span class="v">' + esc(v) + '</span></button>';
+    }).join('') + '</li>';
+  }).join('') + '</ul>';
+}
+function viewSwimmers(r) {
+  return headHtml(r) + '<input class="search" id="q" type="search" autocomplete="off" placeholder="' + esc(t('searchPh')) + '" aria-label="' + esc(t('searchPh')) + '" value="' + esc(S.query) + '"><div id="people">' + peopleHtml() + '</div>';
+}
+function render() {
+  var r = parseRoute(S.route), html;
+  document.documentElement.lang = S.lang; applyTheme();
+  document.getElementById('langs').innerHTML = ['ru', 'lv', 'en'].map(function (l) { return '<button data-lang="' + l + '" aria-pressed="' + (S.lang === l) + '">' + l.toUpperCase() + '</button>'; }).join('');
+  if (r.view === 'home') html = viewHome();
+  else if (!S.meet) html = S.meetErr ? errHtml(S.meetErr) : '<p class="empty">' + esc(t('loading')) + '…</p>';
+  else html = r.view === 'schedule' ? viewSchedule(r) : r.view === 'event' ? viewEvent(r) : viewSwimmers(r);
+  app.innerHTML = html;
+}
+
+/* ---------- events ---------- */
+function openFromInput() {
+  var v = document.getElementById('meetInput').value, m = v.match(/swimrankings\.net\/(\d+)/) || v.trim().match(/^(\d{2,9})$/);
+  if (m) go('m' + m[1]); else document.getElementById('homeErr').textContent = t('badId');
+}
+document.addEventListener('click', function (ev) {
+  var el = ev.target.closest('button'); if (!el) return;
+  if (el.id === 'brand') return go(DEMO ? 'm' + DEMO.meet.id : '');
+  if (el.id === 'meetOpen') return openFromInput();
+  if (el.id === 'theme') { store.set('theme', { auto: 'light', light: 'dark', dark: 'auto' }[store.get('theme', 'auto')]); return applyTheme(); }
+  if (el.dataset.lang) { S.lang = el.dataset.lang; store.set('lang', S.lang); return render(); }
+  if (el.dataset.fav) {
+    var k = el.dataset.fav, i = S.favs.indexOf(k);
+    if (i >= 0) S.favs.splice(i, 1); else S.favs.push(k);
+    store.set('favs', S.favs);
+    var y = window.scrollY; render(); window.scrollTo(0, y); return;
+  }
+  if (el.dataset.go != null) { if (el.dataset.tabgo) S.tab = el.dataset.tabgo; else if (/-e\d+$/.test(el.dataset.go)) S.tab = 'results'; return go(el.dataset.go); }
+  if (el.dataset.tab) { S.tab = el.dataset.tab; return render(); }
+  if (el.dataset.group != null) { S.group = el.dataset.group === '' ? null : Number(el.dataset.group); return render(); }
+  if ('retry' in el.dataset) { S.data = {}; S.meetErr = null; render(); return refresh(); }
+});
+document.addEventListener('change', function (ev) { if (ev.target.id === 'club') { S.club = ev.target.value; render(); } });
+document.addEventListener('input', function (ev) {
+  if (ev.target.id === 'q') { S.query = ev.target.value; document.getElementById('people').innerHTML = peopleHtml(); }
+});
+document.addEventListener('keydown', function (ev) { if (ev.key === 'Enter' && ev.target.id === 'meetInput') openFromInput(); });
+window.addEventListener('hashchange', function () { var h = location.hash.slice(1); if (h !== S.route) { S.route = h; S.tab = 'results'; enter(); } });
+setInterval(function () {
+  var a = document.activeElement, v = parseRoute(S.route).view;
+  if (DEMO || document.hidden || v === 'home' || v === 'swimmers' || (a && /INPUT|SELECT/.test(a.tagName))) return;
+  refresh();
+}, 30000);
+
+S.route = location.hash.slice(1) || (DEMO ? 'm' + DEMO.meet.id : '');
+enter();
+})();
+</script>
+</body>
+</html>

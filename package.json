@@ -1,0 +1,19 @@
+{
+  "name": "swim-live",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Modern interface for SPLASH Meet Manager live results (live.swimrankings.net)",
+  "engines": { "node": ">=18" },
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "cheerio": "1.0.0",
+    "unpdf": "0.12.1"
+  },
+  "devDependencies": {
+    "pdf-lib": "1.17.1"
+  }
+}
